@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* === Base Theme Variables (Dark by default) === */
+:root {
+  /* Dark Theme (default) */
+  --color-bg: #0a0f1c;
+  /* main page background */
+  --color-bg-alt: #0d1b2a;
+  /* card background fallback */
+  --color-bg-gradient: linear-gradient(135deg, #0a0f1c 0%, #0d1b2a 50%, #083344 100%);
+  --color-bg-radial: radial-gradient(circle at center, rgba(56, 189, 248, 0.1), transparent 70%);
+  --color-card-bg: rgba(255, 255, 255, 0.1);
+  --color-input-bg: rgba(31, 41, 55, 0.8);
+  --color-border: rgba(59, 130, 246, 0.5);
+  --color-text: #f3f4f6;
+  --color-accent-green: #00FF7F;
+  --color-red: #f43f5e;
+  --color-cyan: #06b6d4;
+
+  /* Navbar variables */
+  --color-navbar-bg: linear-gradient(to right, #0a0f1c, #0d1b2a, #083344);
+  --color-navbar-border: rgba(6, 182, 212, 0.2);
+  --color-navbar-text: #f3f4f6;
+  --color-navbar-btn-bg: #06b6d4;
+  --color-navbar-btn-bg-hover: #0ea5e9;
+  --color-navbar-btn-text: #ffffff;
+
+  /* Dark Theme Sidebar */
+  --color-sidebar-bg: rgba(15, 23, 42, 0.9);
+  /* semi-transparent dark blue */
+  --color-sidebar-border: rgba(6, 182, 212, 0.2);
+  --color-sidebar-text: #f3f4f6;
+  --color-sidebar-link-hover-bg: rgba(8, 145, 212, 0.2);
+  --color-sidebar-link-hover-text: #06b6d4;
+  --color-sidebar-link-active-bg: #06b6d4;
+  --color-sidebar-link-active-text: #ffffff;
+}
+
+.light {
+  /* Light Theme */
+  --color-bg: #f3f4f6;
+  /* main page background */
+  --color-bg-alt: #e0e7ff;
+  /* card background fallback */
+  --color-bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 50%, #cbd6e2 100%);
+  --color-bg-radial: radial-gradient(circle at center, rgba(14, 165, 233, 0.1), transparent 70%);
+  --color-card-bg: rgba(255, 255, 255, 0.8);
+  --color-input-bg: rgba(255, 255, 255, 0.9);
+  --color-border: rgba(59, 130, 246, 0.3);
+  --color-text: #111827;
+  --color-accent-green: #22c55e;
+  --color-red: #ef4444;
+  --color-cyan: #06b6d4;
+  --color-shadow: rgba(0, 0, 0, 0.05);
+
+  /* Navbar variables */
+  --color-navbar-bg: linear-gradient(to right, #f0f4f8, #d9e2ec, #cbd6e2);
+  --color-navbar-border: rgba(6, 182, 212, 0.3);
+  --color-navbar-text: #1f2937;
+  --color-navbar-btn-bg: #0284c7;
+  --color-navbar-btn-bg-hover: #0369a1;
+  --color-navbar-btn-text: #ffffff;
+
+  /* Light Theme Sidebar */
+  --color-sidebar-bg: rgba(243, 244, 246, 0.95);
+  /* slightly opaque light */
+  --color-sidebar-border: rgba(6, 182, 212, 0.3);
+  --color-sidebar-text: #111827;
+  --color-sidebar-link-hover-bg: rgba(6, 182, 212, 0.1);
+  --color-sidebar-link-hover-text: #0369a1;
+  --color-sidebar-link-active-bg: #06b6d4;
+  --color-sidebar-link-active-text: #ffffff;
+}
+
+/* === Base Styles === */
+@layer base {
+
+  html,
+  body {
+    font-size: 18px;
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+    font-family: "Space Grotesk", sans-serif;
+    background-color: var(--color-bg);
+  }
+
+  h1 {
+    @apply text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  p,
+  input,
+  textarea,
+  button,
+  label {
+    @apply text-lg;
+  }
+
+  input[type="date"] {
+    @apply text-lg;
+    color: var(--color-text);
+    caret-color: var(--color-text);
+  }
+
+  /* Chrome / Edge / Safari */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(2) saturate(0);
+    -webkit-filter: invert(1) brightness(2) saturate(0);
+    opacity: 1;
+  }
+
+  /* Firefox */
+  input[type="date"]::-moz-calendar-picker-indicator {
+    filter: invert(1) brightness(2) saturate(0);
+    opacity: 1;
+  }
+
+  /* Light theme date picker adjustments */
+  .light input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0) brightness(1) saturate(1);
+    -webkit-filter: invert(0) brightness(1) saturate(1);
+  }
+
+  .light input[type="date"]::-moz-calendar-picker-indicator {
+    filter: invert(0) brightness(1) saturate(1);
+  }
+}
+
+/* === Backgrounds & Accents === */
+.bg-darkBlue {
+  background-color: var(--color-bg-alt);
+}
+
+.bg-ledgerly {
+  background: var(--color-bg-ledgerly);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.text-accent-green {
+  color: var(--color-accent-green);
+}
+
+.text-darkBlue {
+  color: var(--color-darkBlue);
+}
+
+.bg-accent-green {
+  background-color: var(--color-accent-green);
+}
+
+.hover\:bg-accent-green:hover {
+  background-color: var(--color-accent-green);
+  opacity: 100%;
+}
+
+/* === Navbar Helpers === */
+.bg-navbar {
+  background: var(--color-navbar-bg);
+}
+
+.border-navbar {
+  border-color: var(--color-navbar-border);
+}
+
+.text-navbar {
+  color: var(--color-navbar-text);
+}
+
+.btn-navbar {
+  background-color: var(--color-navbar-btn-bg);
+  color: var(--color-navbar-btn-text);
+  transition: background-color 0.2s;
+}
+
+.btn-navbar:hover {
+  background-color: var(--color-navbar-btn-bg-hover);
+}
+
+/* Sidebar helpers */
+.bg-sidebar {
+  background-color: var(--color-sidebar-bg);
+}
+
+.border-sidebar {
+  border-color: var(--color-sidebar-border);
+}
+
+.text-sidebar {
+  color: var(--color-sidebar-text);
+}
+
+.link-sidebar {
+  color: var(--color-sidebar-text);
+  transition: all 0.2s;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.link-sidebar:hover {
+  background-color: var(--color-sidebar-link-hover-bg);
+  color: var(--color-sidebar-link-hover-text);
+}
+
+.link-sidebar-active {
+  background-color: var(--color-sidebar-link-active-bg);
+  color: var(--color-sidebar-link-active-text);
+}
+
+/* === Utilities === */
+@layer utilities {
+  @keyframes blink {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .animate-blink {
+    animation: blink 0.8s step-end infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(250%);
+    }
+  }
+
+  .animate-loading-bar {
+    animation: loading 1.2s ease infinite;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in;
+}
