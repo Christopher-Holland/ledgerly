@@ -96,15 +96,15 @@ const DashboardPage = () => {
                         {/* Summary Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6 text-center">
-                                <p className="text-lg text-gray-400">Income</p>
+                                <p className="text-xl text-[var(--color-text)]">Income</p>
                                 <p className="text-2xl font-semibold text-[var(--color-accent-green)]">{currency} {income.toLocaleString()}</p>
                             </div>
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6 text-center">
-                                <p className="text-lg text-gray-400">Expenses</p>
+                                <p className="text-xl text-[var(--color-text)]">Expenses</p>
                                 <p className="text-2xl font-semibold text-[var(--color-red)]">{currency} {expenses.toLocaleString()}</p>
                             </div>
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6 text-center">
-                                <p className="text-lg text-gray-400">Net Cash Flow</p>
+                                <p className="text-xl text-[var(--color-text)]">Net Cash Flow</p>
                                 <p className={`text-2xl font-semibold ${income - expenses >= 0 ? "text-[var(--color-cyan)]" : "text-[var(--color-red)]"}`}>
                                     {currency} {(income - expenses).toLocaleString()}
                                 </p>

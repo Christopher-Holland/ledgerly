@@ -1,57 +1,93 @@
-// src/hooks/useTransactions.js
-import { useState, useMemo } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { useAccounts } from "./useAccounts"; // For account names
+import { useState, useEffect, useCallback } from "react";
+import { useAuth, api } from "./useAuth"; // assumes you already have this set up
 
 export const useTransactions = () => {
-    const { accounts } = useAccounts();
-
+    const { user } = useAuth(); // access logged-in user
     const [transactions, setTransactions] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const addTransaction = (tx) => {
-        setTransactions((prev) => [
-            ...prev,
-            { ...tx, id: uuidv4() }
-        ]);
+    // Fetch accounts
+    const fetchAccounts = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            const res = await api.get("/api/accounts");
+            setAccounts(res.data || []);
+        } catch (err) {
+            console.error("Error fetching accounts:", err);
+        }
+    }, [user]);
+
+    // Fetch transactions
+    const fetchTransactions = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            setLoading(true);
+            const res = await api.get("/api/transactions");
+            setTransactions(res.data || []);
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching transactions:", err);
+            setError("Failed to load transactions");
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    // Add transaction
+    const addTransaction = async (transactionData) => {
+        try {
+            const res = await api.post("/api/transactions", transactionData);
+            setTransactions((prev) => [res.data, ...prev]); // add new transaction to top
+            return res.data;
+        } catch (err) {
+            console.error("Error adding transaction:", err);
+            throw new Error(err.response?.data?.message || "Failed to add transaction");
+        }
     };
 
-    const editTransaction = (id, updatedTx) => {
-        setTransactions((prev) =>
-            prev.map((tx) => (tx.id === id ? { ...tx, ...updatedTx } : tx))
-        );
+    // Update transaction
+    const updateTransaction = async (id, updates) => {
+        try {
+            const res = await api.put(`/api/transactions/${id}`, updates);
+            setTransactions((prev) =>
+                prev.map((t) => (t._id === id ? res.data : t))
+            );
+            return res.data;
+        } catch (err) {
+            console.error("Error updating transaction:", err);
+            throw new Error(err.response?.data?.message || "Failed to update transaction");
+        }
     };
 
-    const deleteTransaction = (id) => {
-        setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+    // Delete transaction
+    const deleteTransaction = async (id) => {
+        try {
+            await api.delete(`/api/transactions/${id}`);
+            setTransactions((prev) => prev.filter((t) => t._id !== id));
+        } catch (err) {
+            console.error("Error deleting transaction:", err);
+            throw new Error(err.response?.data?.message || "Failed to delete transaction");
+        }
     };
 
-    // Calculated totals
-    const totalIncome = useMemo(
-        () =>
-            transactions
-                .filter((tx) => tx.type === "income")
-                .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0),
-        [transactions]
-    );
-
-    const totalExpenses = useMemo(
-        () =>
-            transactions
-                .filter((tx) => tx.type === "expense")
-                .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0),
-        [transactions]
-    );
-
-    const netCashFlow = totalIncome - totalExpenses;
+    useEffect(() => {
+        fetchAccounts();
+        fetchTransactions();
+    }, [fetchAccounts, fetchTransactions]);
 
     return {
         transactions,
+        accounts,
+        loading,
+        error,
+        fetchTransactions,
         addTransaction,
-        editTransaction,
+        updateTransaction,
+        editTransaction: updateTransaction, // Alias for consistency
         deleteTransaction,
-        totalIncome,
-        totalExpenses,
-        netCashFlow,
-        accounts
     };
 };

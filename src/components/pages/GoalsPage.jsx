@@ -1,196 +1,100 @@
+//TODO: Add a progress bar to the goals page
+//TODO: Add a completed button to the goals page
+//TODO: Add a filter to see completed goals that will be removed from the list
+//TODO: Add a goal type (short term, medium term, long term)
+//TODO: 
+
 import Sidebar from '../Sidebar';
 import Navbar from '../Navbar';
 import React, { useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
+import { useAccounts } from '../../hooks/useAccounts';
 import { Edit2, Trash2, PlusCircle, CheckCircle } from "lucide-react";
+import AddGoalModal from '../modals/AddGoalModal';
+import Modal from '../modals/Modal';
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 
 const GoalsPage = () => {
     const { goals, addGoal, removeGoal, editGoal } = useGoals();
-    const [showForm, setShowForm] = useState(false);
+    const { accounts } = useAccounts();
 
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [targetDate, setTargetDate] = useState("");
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingGoal, setEditingGoal] = useState(null);
+    const [goalToDelete, setGoalToDelete] = useState(null);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!title.trim()) return;
+    const startEdit = (goal) => setEditingGoal(goal);
+    const cancelEdit = () => setEditingGoal(null);
 
-        addGoal({ title, description, targetDate });
-        setTitle("");
-        setDescription("");
-        setTargetDate("");
-        setShowForm(false);
-    };
-
-    const [editingId, setEditingId] = useState(null);
-    const [editTitle, setEditTitle] = useState("");
-    const [editDescription, setEditDescription] = useState("");
-    const [editTargetDate, setEditTargetDate] = useState("");
-
-    const startEdit = (goal) => {
-        setEditingId(goal.id);
-        setEditTitle(goal.title);
-        setEditDescription(goal.description);
-        setEditTargetDate(goal.targetDate);
-    };
-
-    const cancelEdit = () => {
-        setEditingId(null);
-        setEditTitle("");
-        setEditDescription("");
-        setEditTargetDate("");
-    };
-
-    const saveEdit = (id) => {
-        editGoal(id, {
-            title: editTitle,
-            description: editDescription,
-            targetDate: editTargetDate,
-        });
+    const saveEdit = (id, updatedGoal) => {
+        editGoal(id, updatedGoal);
         cancelEdit();
+    };
+
+    const confirmDelete = (goal) => {
+        setGoalToDelete(goal);
     };
 
     return (
         <div className="fixed inset-0 flex bg-[var(--color-bg)] text-[var(--color-text)]">
             <Sidebar />
-
             <div className="flex-1 flex flex-col">
                 <Navbar title="Goals" />
-
                 <main className="flex-1 relative overflow-y-auto">
-                    {/* Background */}
                     <div className="absolute inset-0" style={{ background: "var(--color-bg-gradient)" }} />
                     <div className="absolute inset-0" style={{ background: "var(--color-bg-radial)" }} />
-
                     <div className="relative z-10 p-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                             {/* Add Goal Card */}
                             <div
-                                onClick={() => !showForm && setShowForm(true)}
-                                className={`group flex flex-col items-center justify-center text-center 
-               bg-[var(--color-card-bg)] shadow-md rounded-2xl cursor-pointer 
-               transition transform hover:scale-105 p-6 w-full
-               ${showForm ? '' : 'hover:bg-[var(--color-cyan)] hover:text-white'}`}
+                                onClick={() => setShowAddModal(true)}
+                                className="group flex flex-col items-center justify-center text-center 
+                                bg-[var(--color-card-bg)] shadow-md rounded-2xl cursor-pointer 
+                                transition transform hover:scale-105 p-6 w-full hover:bg-[var(--color-cyan)] hover:text-white"
                             >
-                                {!showForm ? (
-                                    <>
-                                        <PlusCircle size={40} className="mb-2" style={{ color: 'var(--color-text)', opacity: 0.6 }} />
-                                        <span className="text-2xl font-semibold">Add New Goal</span>
-                                    </>
-                                ) : (
-                                    <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full mt-2">
-                                        <input
-                                            type="text"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            placeholder="Goal Title"
-                                            className="p-3 rounded text-lg"
-                                            style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                            required
-                                        />
-                                        <textarea
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            placeholder="Description"
-                                            className="p-3 rounded text-lg"
-                                            style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                            rows={3}
-                                        />
-                                        <input
-                                            type="date"
-                                            value={targetDate}
-                                            onChange={(e) => setTargetDate(e.target.value)}
-                                            className="p-3 rounded text-lg"
-                                            style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                        />
-                                        <div className="flex space-x-2">
-                                            <button
-                                                type="submit"
-                                                className="flex-1 bg-[var(--color-cyan)] text-white px-6 py-3 rounded hover:opacity-80 text-lg font-semibold transition"
-                                            >
-                                                Save
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowForm(false)}
-                                                className="flex-1 px-6 py-3 rounded text-lg font-semibold transition"
-                                                style={{ backgroundColor: 'var(--color-text)', opacity: 0.6, color: 'var(--color-bg)' }}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                )}
+                                <PlusCircle size={40} className="mb-2" style={{ color: 'var(--color-text)', opacity: 0.6 }} />
+                                <span className="text-2xl font-semibold">Add New Goal</span>
                             </div>
 
                             {/* Render Goals */}
                             {goals.map((goal) => (
                                 <div
-                                    key={goal.id}
-                                    className="bg-[var(--color-card-bg)] shadow-md rounded-2xl p-6 flex flex-col justify-between"
+                                    key={goal._id}
+                                    className="relative bg-[var(--color-card-bg)] shadow-md rounded-2xl p-6 flex flex-col justify-between"
                                 >
-                                    {editingId === goal.id ? (
-                                        <div className="flex flex-col space-y-3">
-                                            <input
-                                                type="text"
-                                                value={editTitle}
-                                                onChange={(e) => setEditTitle(e.target.value)}
-                                                className="p-3 rounded text-lg"
-                                                style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                                required
-                                            />
-                                            <textarea
-                                                value={editDescription}
-                                                onChange={(e) => setEditDescription(e.target.value)}
-                                                className="p-3 rounded text-lg"
-                                                style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                                rows={2}
-                                            />
-                                            <input
-                                                type="date"
-                                                value={editTargetDate}
-                                                onChange={(e) => setEditTargetDate(e.target.value)}
-                                                className="p-3 rounded text-lg"
-                                                style={{ backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)', border: '1px solid var(--color-text)', opacity: 0.3 }}
-                                            />
-                                            <div className="flex space-x-2 mt-2">
-                                                <button
-                                                    onClick={() => saveEdit(goal.id)}
-                                                    className="flex-1 bg-[var(--color-cyan)] text-white px-4 py-2 rounded flex items-center justify-center gap-1 hover:opacity-80"
-                                                >
-                                                    <CheckCircle className="inline mb-1" /> Save
-                                                </button>
-                                                <button
-                                                    onClick={cancelEdit}
-                                                    className="flex-1 px-4 py-2 rounded hover:opacity-80"
-                                                    style={{ backgroundColor: 'var(--color-text)', opacity: 0.6, color: 'var(--color-bg)' }}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <h3 className="font-bold text-2xl mb-2">{goal.title}</h3>
-                                            <p className="text-lg mb-2" style={{ color: 'var(--color-text)', opacity: 0.8 }}>{goal.description}</p>
-                                            <p className="text-lg" style={{ color: 'var(--color-text)', opacity: 0.6 }}>Target: {goal.targetDate || "N/A"}</p>
-                                            <div className="flex justify-end space-x-3 mt-4">
-                                                <button
-                                                    onClick={() => startEdit(goal)}
-                                                    className="text-[var(--color-cyan)] hover:opacity-70 transition"
-                                                >
-                                                    <Edit2 size={20} />
-                                                </button>
-                                                <button
-                                                    onClick={() => removeGoal(goal.id)}
-                                                    className="text-[var(--color-red)] hover:opacity-70 transition"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
-                                            </div>
-                                        </>
+                                    {/* Edit/Delete Buttons Top Corner */}
+                                    <div className="absolute top-3 right-3 flex space-x-2">
+                                        <button
+                                            onClick={() => startEdit(goal)}
+                                            className="text-[var(--color-cyan)] hover:opacity-80 transition"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={24} />
+                                        </button>
+                                        <button
+                                            onClick={() => confirmDelete(goal)}
+                                            className="text-[var(--color-red)] hover:opacity-80 transition"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={24} />
+                                        </button>
+                                    </div>
+
+                                    <h3 className="font-bold text-2xl mb-2">{goal.title}</h3>
+                                    <p className="text-lg mb-2" style={{ color: 'var(--color-text)', opacity: 0.8 }}>{goal.description}</p>
+                                    <p className="text-lg mb-2" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                                        Target Completion Date: {goal.targetDate
+                                            ? new Date(goal.targetDate).toLocaleDateString('en-US', {
+                                                month: 'long',
+                                                day: '2-digit',
+                                                year: 'numeric'
+                                            })
+                                            : "N/A"}
+                                    </p>
+                                    {goal.linkedAccount && (
+                                        <p className="text-sm text-[var(--color-cyan)]">
+                                            Linked Account: {accounts.find(acc => acc.id === goal.linkedAccount)?.name || "Unknown"}
+                                        </p>
                                     )}
                                 </div>
                             ))}
@@ -198,6 +102,80 @@ const GoalsPage = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Add Goal Modal */}
+            <AddGoalModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onSave={addGoal}
+                accounts={accounts}
+            />
+
+            {/* Edit Goal Modal */}
+            {editingGoal && (
+                <Modal isOpen={true} onClose={cancelEdit} title="Edit Goal" size="lg">
+                    <form className="flex flex-col space-y-4">
+                        <input
+                            type="text"
+                            value={editingGoal.title}
+                            onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
+                            className="p-3 rounded text-lg border border-[var(--color-border)] text-[var(--color-text)] bg-[var(--color-card-bg)]"
+                            required
+                        />
+                        <textarea
+                            value={editingGoal.description}
+                            onChange={(e) => setEditingGoal({ ...editingGoal, description: e.target.value })}
+                            className="p-3 rounded text-lg border border-[var(--color-border)] text-[var(--color-text)] bg-[var(--color-card-bg)]"
+                            rows={2}
+                        />
+                        <input
+                            type="date"
+                            value={editingGoal.targetDate || ""}
+                            onChange={(e) => setEditingGoal({ ...editingGoal, targetDate: e.target.value })}
+                            className="p-3 rounded text-lg border border-[var(--color-border)] text-[var(--color-text)] bg-[var(--color-card-bg)]"
+                        />
+                        <select
+                            value={editingGoal.linkedAccount || ""}
+                            onChange={(e) => setEditingGoal({ ...editingGoal, linkedAccount: e.target.value })}
+                            className="p-3 rounded text-lg border border-[var(--color-border)] text-[var(--color-text)] bg-[var(--color-card-bg)]"
+                        >
+                            <option value="">Optional: Link an account</option>
+                            {accounts.map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                    {acc.name} ({acc.type})
+                                </option>
+                            ))}
+                        </select>
+
+                        <div className="flex space-x-2 mt-2 justify-end">
+                            <button
+                                onClick={cancelEdit}
+                                className="px-6 py-3 rounded-xl border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => saveEdit(editingGoal._id, editingGoal)}
+                                className="px-6 py-3 rounded-xl bg-[var(--color-cyan)] text-white hover:brightness-110 transition"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Confirm Delete Modal */}
+            <ConfirmDeleteModal
+                isOpen={!!goalToDelete}
+                onClose={() => setGoalToDelete(null)}
+                onConfirm={() => removeGoal(goalToDelete._id)}
+                title="Delete Goal"
+                message={`Are you sure you want to delete the goal "${goalToDelete?.title}"? This action cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                confirmColor="bg-red-600 hover:bg-red-700"
+            />
         </div>
     );
 };

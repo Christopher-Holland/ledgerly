@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
+import goalRoutes from './routes/goalRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
+import accountRoutes from './routes/accountRoute.js';
 
 
 // Load environment variables
@@ -28,6 +31,9 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/accounts', accountRoutes);
 
 
 // Test route

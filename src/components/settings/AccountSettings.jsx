@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAuth, api } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal"; // ✅ import the reusable modal
 
 const AccountSettings = ({ onClose }) => {
     const { user, setUser, logout } = useAuth();
@@ -94,7 +95,9 @@ const AccountSettings = ({ onClose }) => {
                     {/* User Info */}
                     <div className="space-y-5">
                         <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-300">Name</label>
+                            <label className="block mb-2 text-sm font-medium text-[var(--color-text)]">
+                                Name
+                            </label>
                             <input
                                 type="text"
                                 value={name}
@@ -103,7 +106,9 @@ const AccountSettings = ({ onClose }) => {
                             />
                         </div>
                         <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-300">Username</label>
+                            <label className="block mb-2 text-sm font-medium text-[var(--color-text)]">
+                                Username
+                            </label>
                             <input
                                 type="text"
                                 value={username}
@@ -112,7 +117,9 @@ const AccountSettings = ({ onClose }) => {
                             />
                         </div>
                         <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-300">Email</label>
+                            <label className="block mb-2 text-sm font-medium text-[var(--color-text)]">
+                                Email
+                            </label>
                             <input
                                 type="email"
                                 value={email}
@@ -194,39 +201,13 @@ const AccountSettings = ({ onClose }) => {
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 flex items-center justify-center z-60 animate-fadeIn">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setShowDeleteModal(false)}
-                    />
-                    <div className="relative bg-[var(--color-card-bg)]/95 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md shadow-2xl text-center z-10 animate-fadeInUp">
-                        <AlertTriangle className="text-red-500 mx-auto mb-3" size={40} />
-                        <h3 className="text-2xl font-bold text-red-400 mb-2">
-                            Delete Account?
-                        </h3>
-                        <p className="text-gray-300 mb-6">
-                            This action is permanent and cannot be undone. Are you sure you want to delete your account?
-                        </p>
-                        <div className="flex justify-center gap-4">
-                            <button
-                                onClick={() => setShowDeleteModal(false)}
-                                className="px-5 py-2 rounded-xl border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-semibold"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDeleteAccount}
-                                disabled={isDeleting}
-                                className="px-5 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition disabled:opacity-50 shadow-md"
-                            >
-                                {isDeleting ? "Deleting..." : "Yes, Delete"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* ✅ Reusable Delete Confirmation Modal */}
+            <ConfirmDeleteModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteAccount}
+                title={user?.name || "your account"}
+            />
         </div>
     );
 };

@@ -27,6 +27,11 @@ const SupportSettings = ({ onClose }) => {
             );
             setSuccess("Your message has been sent successfully!");
             setMessage("");
+
+            // ✅ Close modal after 2 seconds
+            setTimeout(() => {
+                onClose();
+            }, 2000);
         } catch (err) {
             console.error("EmailJS error:", err);
             setSuccess("Failed to send message. Please try again later.");
@@ -58,11 +63,10 @@ const SupportSettings = ({ onClose }) => {
 
                     {success && (
                         <div
-                            className={`p-4 rounded-xl text-center font-semibold animate-fadeIn ${
-                                success.includes("successfully")
+                            className={`p-4 rounded-xl text-center font-semibold animate-fadeIn ${success.includes("successfully")
                                     ? "bg-green-500/20 text-green-400 border border-green-500/30"
                                     : "bg-red-500/20 text-red-400 border border-red-500/30"
-                            }`}
+                                }`}
                         >
                             {success}
                         </div>

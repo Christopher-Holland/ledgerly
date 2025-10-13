@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Sidebar from "../Sidebar";
 import Navbar from "../Navbar";
 import { useTheme } from "../../context/ThemeContext";
-import Modal from "../Modal";
+import Modal from "../modals/Modal";
 
 // Settings components
 import AccountSettings from "../settings/AccountSettings";
