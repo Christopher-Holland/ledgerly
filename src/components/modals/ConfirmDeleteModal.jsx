@@ -42,27 +42,6 @@ const ConfirmDeleteModal = ({
                         {getEntityType()} deleted successfully
                     </h3>
                 </div>
-
-                {/* Animation styles */}
-                <style>{`
-                    @keyframes slideDownFade {
-                        0% {
-                            opacity: 0;
-                            transform: translateY(-20px);
-                        }
-                        50% {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                        100% {
-                            opacity: 0;
-                            transform: translateY(-10px);
-                        }
-                    }
-                    .animate-slideDownFade {
-                        animation: slideDownFade 1.8s ease-in-out forwards;
-                    }
-                `}</style>
             </div>
         );
     }
