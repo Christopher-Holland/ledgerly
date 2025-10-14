@@ -8,6 +8,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useBills } from '../../hooks/useBills';
 import { useGoals } from '../../hooks/useGoals';
 import { useSettings } from '../../hooks/useSettings';
+import BillModal from '../modals/BillModal';
 
 const COLORS = ['#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#3b82f6'];
 
@@ -23,7 +24,19 @@ const DashboardPage = () => {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const [isAddBillOpen, setIsAddBillOpen] = useState(false);
+    const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+    const [selectedBill, setSelectedBill] = useState(null);
+
+    // helper functions for editing/deleting/adding
+    const handleEditBill = (bill) => {
+        setSelectedBill(bill);
+        setIsBillModalOpen(true);
+    };
+
+    const handleAddBill = () => {
+        setSelectedBill(null);
+        setIsBillModalOpen(true);
+    };
 
     const formatDate = (dateStr) => {
         const d = new Date(dateStr);
@@ -177,7 +190,8 @@ const DashboardPage = () => {
                                                 {filteredBills.map((bill) => (
                                                     <tr
                                                         key={bill.id}
-                                                        className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-hover-bg)] transition"
+                                                        onClick={() => handleEditBill(bill)}
+                                                        className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-hover-bg)] transition cursor-pointer"
                                                     >
                                                         <td className="py-2 text-[var(--color-text)]">{bill.name}</td>
                                                         <td className="py-2 text-[var(--color-text)] text-center">
@@ -198,72 +212,83 @@ const DashboardPage = () => {
                                 {/* Edit button */}
                                 <div className="flex justify-end mt-4">
                                     <button
-                                        onClick={() => setIsEditBillsModalOpen(true)} // We'll define this modal next
+                                        onClick={handleAddBill}
                                         className="text-sm px-4 py-2 rounded-lg border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-medium"
                                     >
                                         Edit List
                                     </button>
                                 </div>
-                            </div>
 
-                            {/* Goals */}
-                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
-                                <h3 className="text-2xl font-semibold mb-3">Goals Progress</h3>
-                                {goals.length > 0 ? (
-                                    goals.map((goal) => {
-                                        const progress = Math.min((goal.saved / goal.target) * 100, 100).toFixed(0);
-                                        return (
-                                            <div key={goal.id} className="mb-3">
-                                                <div className="flex justify-between text-lg mb-1">
-                                                    <span>{goal.name}</span>
-                                                    <span>{progress}%</span>
-                                                </div>
-                                                <div className="h-3 bg-gray-700 rounded-full">
-                                                    <div
-                                                        className="h-full bg-[var(--color-cyan)] rounded-full"
-                                                        style={{ width: `${progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <p className="text-gray-400 text-center">No goals set</p>
+                                {/* Bill Modal */}
+                                {isBillModalOpen && (
+                                    <BillModal
+                                        isOpen={isBillModalOpen}
+                                        onClose={() => setIsBillModalOpen(false)}
+                                        bill={selectedBill}
+                                    />
                                 )}
                             </div>
 
-                            {/* Alerts */}
-                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
-                                <h3 className="text-2xl font-semibold mb-3">Alerts</h3>
-                                <ul className="list-disc list-inside text-[var(--color-text)] space-y-1">
-                                    {expenses > income && (
-                                        <li className="text-[var(--color-red)]">Spending exceeds income!</li>
-                                    )}
-                                    {accounts.some(a => a.id === defaultAccountId && a.balance < 50) && (
-                                        <li className="text-yellow-400">Low default account balance</li>
-                                    )}
-                                </ul>
-                            </div>
+                        {/* Goals */}
+                        <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
+                            <h3 className="text-2xl font-semibold mb-3">Goals Progress</h3>
+                            {goals.length > 0 ? (
+                                goals.map((goal) => {
+                                    const progress = Math.min((goal.saved / goal.target) * 100, 100).toFixed(0);
+                                    return (
+                                        <div key={goal.id} className="mb-3">
+                                            <div className="flex justify-between text-lg mb-1">
+                                                <span>{goal.name}</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="h-3 bg-gray-700 rounded-full">
+                                                <div
+                                                    className="h-full bg-[var(--color-cyan)] rounded-full"
+                                                    style={{ width: `${progress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-gray-400 text-center">No goals set</p>
+                            )}
+                        </div>
 
-                            {/* Income vs Expenses */}
-                            <div className="col-span-full flex justify-center">
-                                <div className="bg-[var(--color-card-bg)] backdrop-blur-md shadow-lg rounded-2xl p-6 w-full max-w-xl">
-                                    <h3 className="text-2xl font-semibold mb-3">Income vs Expenses ({timeRange === 'month' ? 'Monthly' : 'Yearly'})</h3>
-                                    <div className="h-48">
-                                        <ResponsiveContainer>
-                                            <BarChart data={incomeVsExpenseData}>
-                                                <XAxis dataKey="name" stroke="#9ca3af" />
-                                                <YAxis stroke="#9ca3af" />
-                                                <Tooltip />
-                                                <Legend />
-                                                <Bar dataKey="amount" fill="#06b6d4" radius={[6, 6, 0, 0]} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
+                        {/* Alerts */}
+                        <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
+                            <h3 className="text-2xl font-semibold mb-3">Alerts</h3>
+                            <ul className="list-disc list-inside text-[var(--color-text)] space-y-1">
+                                {expenses > income && (
+                                    <li className="text-[var(--color-red)]">Spending exceeds income!</li>
+                                )}
+                                {accounts.some(a => a.id === defaultAccountId && a.balance < 50) && (
+                                    <li className="text-yellow-400">Low default account balance</li>
+                                )}
+                            </ul>
+                        </div>
+
+                        {/* Income vs Expenses */}
+                        <div className="col-span-full flex justify-center">
+                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md shadow-lg rounded-2xl p-6 w-full max-w-xl">
+                                <h3 className="text-2xl font-semibold mb-3">Income vs Expenses ({timeRange === 'month' ? 'Monthly' : 'Yearly'})</h3>
+                                <div className="h-48">
+                                    <ResponsiveContainer>
+                                        <BarChart data={incomeVsExpenseData}>
+                                            <XAxis dataKey="name" stroke="#9ca3af" />
+                                            <YAxis stroke="#9ca3af" />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Bar dataKey="amount" fill="#06b6d4" radius={[6, 6, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
                             </div>
+                        </div>
 
                         </div>
+                        {/* End Dashboard Grid */}
+
                     </div>
                 </main>
             </div>
