@@ -9,32 +9,72 @@ import { Trash2, Edit2, PlusCircle, TrendingUp, TrendingDown, Wallet } from "luc
 
 const AccountsPage = () => {
     const [accounts, setAccounts] = useState([]);
+    const [transactions, setTransactions] = useState([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [accountToEdit, setAccountToEdit] = useState(null);
     const [accountToDelete, setAccountToDelete] = useState(null);
 
-    // Fetch accounts from backend
+    // Fetch accounts and transactions from backend
     useEffect(() => {
-        const fetchAccounts = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get("/api/accounts");
-                setAccounts(res.data);
+                const [accountsRes, transactionsRes] = await Promise.all([
+                    api.get("/api/accounts"),
+                    api.get("/api/transactions")
+                ]);
+                setAccounts(accountsRes.data);
+                setTransactions(transactionsRes.data);
             } catch (err) {
-                console.error("Failed to fetch accounts:", err);
+                console.error("Failed to fetch data:", err);
             }
         };
-        fetchAccounts();
+        fetchData();
     }, []);
 
-    // Totals
+    // Calculate actual balance for each account based on transactions
+    const accountsWithBalances = useMemo(() => {
+        return accounts.map(account => {
+            // Start with initial balance
+            let calculatedBalance = account.balance || 0;
+            
+            // Get all transactions for this account
+            const accountTransactions = transactions.filter(
+                tx => tx.accountId?.toString() === account._id?.toString()
+            );
+            
+            // Add income and subtract expenses
+            accountTransactions.forEach(tx => {
+                if (tx.type === 'income') {
+                    calculatedBalance += parseFloat(tx.amount) || 0;
+                } else if (tx.type === 'expense') {
+                    calculatedBalance -= parseFloat(tx.amount) || 0;
+                }
+            });
+            
+            // Count transactions
+            const transactionCount = accountTransactions.length;
+            
+            return {
+                ...account,
+                calculatedBalance,
+                transactionCount
+            };
+        });
+    }, [accounts, transactions]);
+
+    // Totals based on calculated balances
     const totals = useMemo(() => {
-        const income = accounts.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0);
-        const expenses = accounts.filter(a => a.balance < 0).reduce((sum, a) => sum + Math.abs(a.balance), 0);
+        const income = accountsWithBalances
+            .filter(a => a.calculatedBalance > 0)
+            .reduce((sum, a) => sum + a.calculatedBalance, 0);
+        const expenses = accountsWithBalances
+            .filter(a => a.calculatedBalance < 0)
+            .reduce((sum, a) => sum + Math.abs(a.calculatedBalance), 0);
         const net = income - expenses;
         return { income, expenses, net };
-    }, [accounts]);
+    }, [accountsWithBalances]);
 
     // Handlers
     const handleAddAccount = async (newAccount) => {
@@ -53,6 +93,9 @@ const AccountsPage = () => {
             setAccounts(accounts.map(a => a._id === res.data._id ? res.data : a));
             setAccountToEdit(null);
             setIsEditModalOpen(false);
+            // Refetch transactions to update balances
+            const transactionsRes = await api.get("/api/transactions");
+            setTransactions(transactionsRes.data);
         } catch (err) {
             console.error("Failed to update account:", err);
         }
@@ -64,6 +107,9 @@ const AccountsPage = () => {
             setAccounts(accounts.filter(a => a._id !== accountToDelete._id));
             setAccountToDelete(null);
             setIsConfirmModalOpen(false);
+            // Refetch transactions to update balances
+            const transactionsRes = await api.get("/api/transactions");
+            setTransactions(transactionsRes.data);
         } catch (err) {
             console.error("Failed to delete account:", err);
         }
@@ -103,7 +149,7 @@ const AccountsPage = () => {
                                 <div>
                                     <p className="text-[var(--color-muted)]">Total Assets</p>
                                     <p className="text-2xl font-bold text-[var(--color-accent-green)]">
-                                        ${totals.income.toLocaleString()}
+                                        ${totals.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>
@@ -112,7 +158,7 @@ const AccountsPage = () => {
                                 <div>
                                     <p className="text-[var(--color-muted)]">Total Debt</p>
                                     <p className="text-2xl font-bold text-red-400">
-                                        ${totals.expenses.toLocaleString()}
+                                        ${totals.expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>
@@ -121,7 +167,7 @@ const AccountsPage = () => {
                                 <div>
                                     <p className="text-[var(--color-muted)]">Net Worth</p>
                                     <p className={`text-2xl font-bold ${totals.net >= 0 ? "text-[var(--color-cyan)]" : "text-red-400"}`}>
-                                        ${totals.net.toLocaleString()}
+                                        ${totals.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>
@@ -129,7 +175,7 @@ const AccountsPage = () => {
 
                         {/* Account Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {accounts.map((account) => (
+                            {accountsWithBalances.map((account) => (
                                 <div
                                     key={account._id}
                                     className="relative bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6 hover:shadow-xl transition border border-[var(--color-border)]"
@@ -147,11 +193,11 @@ const AccountsPage = () => {
                                     {/* Account Info */}
                                     <h2 className="text-xl font-bold text-[var(--color-text)] mb-1">{account.name}</h2>
                                     <p className="text-[var(--color-muted)] mb-1">{account.type} {account.institution && `- ${account.institution}`}</p>
-                                    <p className={`mt-1 text-2xl font-semibold ${account.balance < 0 ? "text-red-400" : "text-[var(--color-cyan)]"}`}>
-                                        ${account.balance.toLocaleString()}
+                                    <p className={`mt-1 text-2xl font-semibold ${account.calculatedBalance < 0 ? "text-red-400" : "text-[var(--color-cyan)]"}`}>
+                                        ${account.calculatedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                    {account.transactions !== undefined && (
-                                        <p className="text-sm text-[var(--color-muted)] mt-2">{account.transactions} transactions</p>
+                                    {account.transactionCount !== undefined && (
+                                        <p className="text-sm text-[var(--color-muted)] mt-2">{account.transactionCount} transactions</p>
                                     )}
                                 </div>
                             ))}

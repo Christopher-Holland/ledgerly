@@ -13,20 +13,26 @@ const EditAccountModal = ({ isOpen, onClose, onSave, account }) => {
         if (account) {
             setName(account.name || "");
             setType(account.type || "");
-            setBalance(account.balance?.toString() || "");
+            // Show absolute value in input, balanceType handles the sign
+            setBalance(Math.abs(account.balance || 0).toString());
             setInstitution(account.institution || "");
-            setBalanceType(account.balanceType || "positive");
+            // Determine balanceType from the current balance
+            setBalanceType(account.balance < 0 ? "negative" : "positive");
         }
     }, [account]);
 
     const handleSave = () => {
         if (!name.trim() || !type.trim()) return;
 
+        // Calculate balance based on balanceType
+        const numericBalance = parseFloat(balance) || 0;
+        const finalBalance = balanceType === "negative" ? -Math.abs(numericBalance) : Math.abs(numericBalance);
+
         onSave({
             ...account,
             name,
             type,
-            balance: parseFloat(balance) || 0,
+            balance: finalBalance,
             institution,
             balanceType,
         });

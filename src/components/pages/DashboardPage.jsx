@@ -23,6 +23,8 @@ const DashboardPage = () => {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
+    const [isAddBillOpen, setIsAddBillOpen] = useState(false);
+
     const formatDate = (dateStr) => {
         const d = new Date(dateStr);
         if (dateFormat === "MM/DD/YYYY") return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
@@ -155,19 +157,53 @@ const DashboardPage = () => {
 
                             {/* Upcoming Bills */}
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
-                                <h3 className="text-2xl font-semibold mb-3">Upcoming Bills ({timeRange === 'month' ? 'This Month' : 'This Year'})</h3>
+                                <div className="flex justify-center items-center mb-4">
+                                    <h3 className="text-2xl font-semibold text-[var(--color-text)]">
+                                        Upcoming Bills ({timeRange === "month" ? "This Month" : "This Year"})
+                                    </h3>
+                                </div>
+
                                 {filteredBills.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {filteredBills.map((bill) => (
-                                            <li key={bill.id} className="flex justify-between text-[var(--color-text)]">
-                                                <span>{bill.name}</span>
-                                                <span className="text-[var(--color-red)]">{currency} {bill.amount}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="text-[var(--color-muted)] border-b border-[var(--color-border)]">
+                                                    <th className="py-2">Name</th>
+                                                    <th className="py-2 text-center">Date</th>
+                                                    <th className="py-2 text-right">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredBills.map((bill) => (
+                                                    <tr
+                                                        key={bill.id}
+                                                        className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-hover-bg)] transition"
+                                                    >
+                                                        <td className="py-2 text-[var(--color-text)]">{bill.name}</td>
+                                                        <td className="py-2 text-[var(--color-text)] text-center">
+                                                            {new Date(bill.date).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="py-2 text-right text-[var(--color-red)]">
+                                                            {currency} {bill.amount.toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 ) : (
                                     <p className="text-gray-400 text-center">No upcoming bills</p>
                                 )}
+
+                                {/* Edit button */}
+                                <div className="flex justify-end mt-4">
+                                    <button
+                                        onClick={() => setIsEditBillsModalOpen(true)} // We'll define this modal next
+                                        className="text-sm px-4 py-2 rounded-lg border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-medium"
+                                    >
+                                        Edit List
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Goals */}

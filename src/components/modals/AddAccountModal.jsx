@@ -11,10 +11,14 @@ const AddAccountModal = ({ isOpen, onClose, onSave }) => {
     const handleSave = () => {
         if (!name.trim() || !type.trim()) return;
 
+        // Calculate balance based on balanceType
+        const numericBalance = parseFloat(balance) || 0;
+        const finalBalance = balanceType === "negative" ? -Math.abs(numericBalance) : Math.abs(numericBalance);
+
         onSave({
             name,
             type,
-            balance: parseFloat(balance) || 0,
+            balance: finalBalance,
             institution,
             balanceType,
         });
