@@ -6,6 +6,7 @@ import userRoutes from './routes/userRoutes.js';
 import goalRoutes from './routes/goalRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import accountRoutes from './routes/accountRoute.js';
+import billsRoute from './routes/billsRoute.js';
 
 
 // Load environment variables
@@ -34,7 +35,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/accounts', accountRoutes);
-
+app.use('/api/bills', billsRoute);
 
 // Test route
 app.get('/', (req, res) => {

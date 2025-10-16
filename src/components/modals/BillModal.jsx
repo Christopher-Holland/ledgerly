@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, CheckCircle } from "lucide-react";
 
-const EditBillsModal = ({ isOpen, onClose, bills = [], onSave }) => {
+const EditBillsModal = ({ isOpen, onClose, bills = [], onSave, updateBills }) => {
     const [localBills, setLocalBills] = useState([]);
+    const [newBill, setNewBill] = useState({ name: "", date: "", amount: "" });
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         setLocalBills(bills);
@@ -36,30 +39,66 @@ const EditBillsModal = ({ isOpen, onClose, bills = [], onSave }) => {
         );
     }
 
-    const handleAddBill = () => {
-        setLocalBills([
-            ...localBills,
-            { id: Date.now(), name: "", date: "", amount: "" },
-        ]);
-    };
-
-    const handleDeleteBill = (id) => {
-        setLocalBills(localBills.filter((b) => b.id !== id));
-    };
-
+    // Handle inline field editing
     const handleBillChange = (id, field, value) => {
         setLocalBills(localBills.map((b) =>
-            b.id === id ? { ...b, [field]: value } : b
+            (b._id || b.id) === id ? { ...b, [field]: value } : b
         ));
     };
 
-    const handleSave = () => {
-        onSave(localBills);
-        setShowSuccess(true);
-        setTimeout(() => {
-            setShowSuccess(false);
-            onClose();
-        }, 1800);
+    // Handle deleting a bill
+    const handleDeleteBill = (id) => {
+        setLocalBills(localBills.filter((b) => (b._id || b.id) !== id));
+    };
+
+    // Handle adding a new bill from form
+    const handleAddBill = (e) => {
+        e.preventDefault();
+        if (!newBill.name || !newBill.date || !newBill.amount) return;
+
+        const billToAdd = {
+            name: newBill.name,
+            date: newBill.date,
+            amount: parseFloat(newBill.amount).toFixed(2),
+        };
+
+        setLocalBills([...localBills, billToAdd]);
+        setNewBill({ name: "", date: "", amount: "" }); // reset form
+    };
+
+    // Handle save (calls API through updateBills function)
+    const handleSave = async () => {
+        if (!updateBills) {
+            // Fallback to parent onSave if updateBills not provided
+            onSave(localBills);
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                onClose();
+            }, 1800);
+            return;
+        }
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const result = await updateBills(localBills);
+            if (result.success) {
+                setShowSuccess(true);
+                setTimeout(() => {
+                    setShowSuccess(false);
+                    onClose();
+                }, 1800);
+            } else {
+                setError(result.error || "Failed to save bills");
+            }
+        } catch (err) {
+            console.error("Error saving bills:", err);
+            setError("Failed to save bills");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -76,8 +115,55 @@ const EditBillsModal = ({ isOpen, onClose, bills = [], onSave }) => {
                     Manage Bills
                 </h2>
 
+                {/* Error message */}
+                {error && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                {/* ➕ Add Bill Form */}
+                <form onSubmit={handleAddBill} className="mb-6 flex flex-wrap gap-3 items-end">
+                    <div className="flex-1">
+                        <label className="block text-sm text-[var(--color-muted)] mb-1">Name</label>
+                        <input
+                            type="text"
+                            value={newBill.name}
+                            onChange={(e) => setNewBill({ ...newBill, name: e.target.value })}
+                            placeholder="Bill name"
+                            className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-[var(--color-muted)] mb-1">Date</label>
+                        <input
+                            type="date"
+                            value={newBill.date}
+                            onChange={(e) => setNewBill({ ...newBill, date: e.target.value })}
+                            className="bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-[var(--color-muted)] mb-1">Amount</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={newBill.amount}
+                            onChange={(e) => setNewBill({ ...newBill, amount: e.target.value })}
+                            placeholder="0.00"
+                            className="bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)] w-24"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-medium"
+                    >
+                        <Plus size={18} /> Add
+                    </button>
+                </form>
+
                 {/* Bills Table */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-80">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-[var(--color-muted)] border-b border-[var(--color-border)]">
@@ -88,71 +174,65 @@ const EditBillsModal = ({ isOpen, onClose, bills = [], onSave }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {localBills.map((bill) => (
-                                <tr key={bill.id} className="border-b border-[var(--color-border)] last:border-0">
-                                    <td className="py-2">
-                                        <input
-                                            type="text"
-                                            value={bill.name}
-                                            onChange={(e) => handleBillChange(bill.id, "name", e.target.value)}
-                                            className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
-                                            placeholder="Bill name"
-                                        />
-                                    </td>
-                                    <td className="py-2">
-                                        <input
-                                            type="date"
-                                            value={bill.date}
-                                            onChange={(e) => handleBillChange(bill.id, "date", e.target.value)}
-                                            className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
-                                        />
-                                    </td>
-                                    <td className="py-2">
-                                        <input
-                                            type="number"
-                                            value={bill.amount}
-                                            onChange={(e) => handleBillChange(bill.id, "amount", e.target.value)}
-                                            className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
-                                            placeholder="0.00"
-                                        />
-                                    </td>
-                                    <td className="py-2 text-right">
-                                        <button
-                                            onClick={() => handleDeleteBill(bill.id)}
-                                            className="text-[var(--color-red)] hover:opacity-80 transition"
-                                        >
-                                            <Trash2 size={20} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {localBills.map((bill) => {
+                                const billId = bill._id || bill.id;
+                                return (
+                                    <tr key={billId} className="border-b border-[var(--color-border)] last:border-0">
+                                        <td className="py-2">
+                                            <input
+                                                type="text"
+                                                value={bill.name}
+                                                onChange={(e) => handleBillChange(billId, "name", e.target.value)}
+                                                className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
+                                            />
+                                        </td>
+                                        <td className="py-2">
+                                            <input
+                                                type="date"
+                                                value={bill.date}
+                                                onChange={(e) => handleBillChange(billId, "date", e.target.value)}
+                                                className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
+                                            />
+                                        </td>
+                                        <td className="py-2">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={bill.amount}
+                                                onChange={(e) => handleBillChange(billId, "amount", e.target.value)}
+                                                className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
+                                            />
+                                        </td>
+                                        <td className="py-2 text-right">
+                                            <button
+                                                onClick={() => handleDeleteBill(billId)}
+                                                className="text-[var(--color-red)] hover:opacity-80 transition"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex justify-between items-center mt-6">
+                {/* Footer Buttons */}
+                <div className="flex justify-end gap-3 mt-6">
                     <button
-                        onClick={handleAddBill}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-medium"
+                        onClick={onClose}
+                        className="px-5 py-2 rounded-xl border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-semibold"
                     >
-                        <Plus size={18} /> Add Bill
+                        Cancel
                     </button>
-
-                    <div className="flex gap-3">
-                        <button
-                            onClick={onClose}
-                            className="px-5 py-2 rounded-xl border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[var(--color-cyan)] hover:text-[var(--color-bg)] transition font-semibold"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="px-5 py-2 rounded-xl bg-[var(--color-cyan)] text-white font-semibold hover:brightness-110 transition shadow-md"
-                        >
-                            Save Changes
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="px-5 py-2 rounded-xl bg-[var(--color-cyan)] text-white font-semibold hover:brightness-110 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSaving ? "Saving..." : "Save Changes"}
+                    </button>
                 </div>
             </div>
         </div>

@@ -15,7 +15,7 @@ const COLORS = ['#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#3b82f6'];
 const DashboardPage = () => {
     const { accounts } = useAccounts();
     const { transactions } = useTransactions();
-    const { bills } = useBills();
+    const { bills, updateBills } = useBills();
     const { goals } = useGoals();
     const { defaultAccountId, currency, dateFormat } = useSettings();
 
@@ -57,7 +57,7 @@ const DashboardPage = () => {
 
     const filteredBills = useMemo(() => {
         return bills.filter((b) => {
-            const billDate = new Date(b.due);
+            const billDate = new Date(b.date || b.due);
             if (timeRange === 'month') return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear;
             if (timeRange === 'year') return billDate.getFullYear() === currentYear;
             return true;
@@ -189,13 +189,13 @@ const DashboardPage = () => {
                                             <tbody>
                                                 {filteredBills.map((bill) => (
                                                     <tr
-                                                        key={bill.id}
+                                                        key={bill._id || bill.id}
                                                         onClick={() => handleEditBill(bill)}
                                                         className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-hover-bg)] transition cursor-pointer"
                                                     >
                                                         <td className="py-2 text-[var(--color-text)]">{bill.name}</td>
                                                         <td className="py-2 text-[var(--color-text)] text-center">
-                                                            {new Date(bill.date).toLocaleDateString()}
+                                                            {formatDate(bill.date || bill.due)}
                                                         </td>
                                                         <td className="py-2 text-right text-[var(--color-red)]">
                                                             {currency} {bill.amount.toLocaleString()}
@@ -224,7 +224,9 @@ const DashboardPage = () => {
                                     <BillModal
                                         isOpen={isBillModalOpen}
                                         onClose={() => setIsBillModalOpen(false)}
-                                        bill={selectedBill}
+                                        bills={bills}
+                                        onSave={() => {}} // Fallback for compatibility
+                                        updateBills={updateBills}
                                     />
                                 )}
                             </div>
