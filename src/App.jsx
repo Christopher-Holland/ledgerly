@@ -15,7 +15,6 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import { UserAccountProvider } from './hooks/useUserAccounts.jsx';
 
 // Page components
-import LoadingScreen from './components/pages/LoadingScreen';
 import WelcomePage from './components/pages/WelcomePage';
 import LoginPage from './components/pages/LoginPage';
 import RegisterPage from './components/pages/RegisterPage';
@@ -41,8 +40,11 @@ function AppContent() {
   // Authentication state from context
   const { isAuthenticated, loading } = useAuth();
 
-  // Show loading screen while authentication is being verified
-  if (loading) return <LoadingScreen />;
+  // Handle loading state smoothly without flashing
+  if (loading) {
+    // Return null to prevent any visual flashing during authentication check
+    return null;
+  }
 
   // Auto-complete loading if user is already authenticated
   if (isAuthenticated && !isLoaded) {
