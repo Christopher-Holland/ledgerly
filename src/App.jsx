@@ -28,9 +28,16 @@ function AppContent() {
 
   if (loading) return <LoadingScreen />;
 
+  // 🧠 If already logged in, skip WelcomePage
+  if (isAuthenticated && !isLoaded) {
+    setIsLoaded(true);
+  }
+
   return (
     <>
-      {!isLoaded && <WelcomePage onComplete={() => setIsLoaded(true)} />}
+      {!isLoaded && !isAuthenticated && (
+        <WelcomePage onComplete={() => setIsLoaded(true)} />
+      )}
 
       {isLoaded && (
         <div className="min-h-screen transition-opacity duration-700 opacity-100 bg-black text-gray-100">

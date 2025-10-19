@@ -375,7 +375,9 @@ const DashboardPage = () => {
                                 <ul className="list-disc list-inside text-[var(--color-text)] space-y-1">
                                     {expenses > income && (
                                         <li className="text-[var(--color-red)]">Spending exceeds income!</li>
-                                    )}
+                                    )} {
+                                        <li className="text-[var(--color-red)]">No alerts found!</li>
+                                    }
                                     {accounts.some(a => (a._id || a.id) === defaultAccountId && a.balance < 50) && (
                                         <li className="text-yellow-400">Low default account balance</li>
                                     )}
