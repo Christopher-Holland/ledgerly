@@ -1,14 +1,20 @@
-// src/App.jsx
+/**
+ * @fileoverview Main App component with routing and authentication
+ * @description React application entry point with protected routes and context providers
+ * @author Christopher Holland
+ * @version 1.0.0
+ */
+
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import "./index.css";
 
-// Hooks
+// Context providers and hooks
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { UserAccountProvider } from './hooks/useUserAccounts.jsx';
 
-// Pages
+// Page components
 import LoadingScreen from './components/pages/LoadingScreen';
 import WelcomePage from './components/pages/WelcomePage';
 import LoginPage from './components/pages/LoginPage';
@@ -22,37 +28,52 @@ import SettingsPage from './components/pages/SettingsPage';
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "./components/pages/ResetPasswordPage.jsx";
 
+/**
+ * Main application content component with routing logic
+ * @description Handles route protection and navigation based on authentication status
+ * @component AppContent
+ * @returns {JSX.Element} Application content with conditional routing
+ */
 function AppContent() {
+  // State to track if the app has finished initial loading
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Authentication state from context
   const { isAuthenticated, loading } = useAuth();
 
+  // Show loading screen while authentication is being verified
   if (loading) return <LoadingScreen />;
 
-  // 🧠 If already logged in, skip WelcomePage
+  // Auto-complete loading if user is already authenticated
   if (isAuthenticated && !isLoaded) {
     setIsLoaded(true);
   }
 
   return (
     <>
+      {/* Show welcome page for new/unauthenticated users */}
       {!isLoaded && !isAuthenticated && (
         <WelcomePage onComplete={() => setIsLoaded(true)} />
       )}
 
+      {/* Main application content for loaded/authenticated users */}
       {isLoaded && (
         <div className="min-h-screen transition-opacity duration-700 opacity-100 bg-black text-gray-100">
           <Router>
             <Routes>
+              {/* Public routes for unauthenticated users */}
               {!isAuthenticated && (
                 <>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                  {/* Redirect all other routes to login */}
                   <Route path="*" element={<Navigate to="/login" replace />} />
                 </>
               )}
 
+              {/* Protected routes for authenticated users */}
               {isAuthenticated && (
                 <>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -62,6 +83,7 @@ function AppContent() {
                   <Route path="/goals" element={<GoalsPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  {/* Redirect all other routes to dashboard */}
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </>
               )}
@@ -73,6 +95,12 @@ function AppContent() {
   );
 }
 
+/**
+ * Root App component with context providers
+ * @description Wraps the application with necessary context providers for state management
+ * @component App
+ * @returns {JSX.Element} Application wrapped with context providers
+ */
 export default function App() {
   return (
     <AuthProvider>

@@ -1,28 +1,49 @@
-// src/hooks/useAuth.js
+/**
+ * @fileoverview Authentication context and hook for user management
+ * @description Provides authentication state, login/logout functionality, and API configuration
+ * @author Christopher Holland
+ * @version 1.0.0
+ */
+
 import { useState, useEffect, createContext, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+// API configuration
 const API_BASE_URL = "http://localhost:5001";
 const api = axios.create({ baseURL: API_BASE_URL });
 
+// Create authentication context
 const AuthContext = createContext();
 
+/**
+ * Authentication provider component
+ * @description Provides authentication state and methods to child components
+ * @component AuthProvider
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components
+ * @returns {JSX.Element} Context provider with authentication functionality
+ */
 export const AuthProvider = ({ children }) => {
-    // Load existing token from storage
+    // Load existing authentication token from browser storage
     const storedToken = localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(storedToken);
-    const [loading, setLoading] = useState(true);
-    
+    // Authentication state management
+    const [user, setUser] = useState(null);        // Current authenticated user
+    const [token, setToken] = useState(storedToken); // JWT authentication token
+    const [loading, setLoading] = useState(true);   // Loading state for auth verification
 
-    // Attach or remove token from axios headers
+    /**
+     * Configure axios headers with authentication token
+     * @description Automatically attaches or removes Bearer token from API requests
+     */
     useEffect(() => {
         if (token) {
+            // Set Authorization header for authenticated requests
             api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
             console.log("Token set in headers:", token);
         } else {
+            // Remove Authorization header for unauthenticated requests
             delete api.defaults.headers.common["Authorization"];
             console.log("Token removed from headers");
         }

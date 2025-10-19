@@ -11,7 +11,7 @@ const Sidebar = () => {
     <aside className="w-64 h-screen bg-sidebar backdrop-blur border-r border-sidebar flex flex-col p-6">
       {/* Logo / App name */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-cyan-300">Ledgerly</h1>
+        <h1 className="text-4xl font-montserrat text-[var(--color-cyan)] font-bold">Ledgerly</h1>
       </div>
 
       {/* Navigation */}

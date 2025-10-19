@@ -72,6 +72,26 @@
   --color-sidebar-link-active-text: #ffffff;
 }
 
+/* === Logo === */
+.logo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 4rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-cyan);
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.logo:hover {
+  filter: brightness(1.2);
+  transition: all 0.3s ease;
+}
+
+.font-family-Montserrat {
+  font-family: 'Montserrat', sans-serif;
+}
+
 /* === Base Styles === */
 @layer base {
 
