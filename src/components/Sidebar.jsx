@@ -8,7 +8,7 @@ const Sidebar = () => {
     `link-sidebar ${location.pathname === path ? "link-sidebar-active" : ""}`;
 
   return (
-    <aside className="w-64 h-screen bg-sidebar backdrop-blur border-r border-sidebar flex flex-col p-6">
+    <aside className="w-64 min-h-screen bg-sidebar backdrop-blur border-r border-sidebar flex flex-col p-6">
       {/* Logo / App name */}
       <div className="mb-10">
         <h1 className="text-4xl font-montserrat text-[var(--color-cyan)] font-bold">Ledgerly</h1>
