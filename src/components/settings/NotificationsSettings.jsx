@@ -129,7 +129,14 @@ const NotificationsSettings = ({ onClose }) => {
                 <h2 className="text-3xl font-bold mb-6 text-center text-[var(--color-cyan)]">
                     Notification Settings
                 </h2>
-
+                <div className="text-center py-8">
+                    <p className="text-lg text-[var(--color-red)] mb-4">
+                        This feature is currently unavailable. Please check back later.
+                    </p>
+                    <p className="text-base text-[var(--color-red)]">
+                        We're working on bringing you notifications with your favorite financial tools.
+                    </p>
+                </div>
                 <div className="space-y-6">
                     {renderCategory("Account Activity", "accountActivity")}
                     {renderCategory("Budget Alerts", "budgetAlerts")}

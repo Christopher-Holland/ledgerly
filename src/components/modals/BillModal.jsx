@@ -59,7 +59,7 @@ const EditBillsModal = ({ isOpen, onClose, bills = [], onSave, updateBills }) =>
         const billToAdd = {
             name: newBill.name,
             date: newBill.date,
-            amount: parseFloat(newBill.amount).toFixed(2),
+            amount: parseFloat(newBill.amount),
         };
 
         setLocalBills([...localBills, billToAdd]);
@@ -189,7 +189,7 @@ const EditBillsModal = ({ isOpen, onClose, bills = [], onSave, updateBills }) =>
                                         <td className="py-2">
                                             <input
                                                 type="date"
-                                                value={bill.date}
+                                                value={bill.date ? (bill.date.match(/^\d{4}-\d{2}-\d{2}$/) ? bill.date : new Date(bill.date).toISOString().split('T')[0]) : ''}
                                                 onChange={(e) => handleBillChange(billId, "date", e.target.value)}
                                                 className="w-full bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan)]"
                                             />

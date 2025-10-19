@@ -15,12 +15,16 @@ export const getGoals = async (req, res) => {
 // Create a new goal
 export const createGoal = async (req, res) => {
     try {
-        const { title, description, targetDate, linkedAccount } = req.body;
+        const { title, description, targetDate, linkedAccount, targetAmount, currentAmount, goalType, completed } = req.body;
 
         const goalData = {
             title,
             description,
             targetDate,
+            targetAmount: targetAmount || 0,
+            currentAmount: currentAmount || 0,
+            goalType: goalType || '',
+            completed: completed || false,
             userId: req.user._id
         };
 
@@ -39,15 +43,16 @@ export const createGoal = async (req, res) => {
 // Update an existing goal
 export const updateGoal = async (req, res) => {
     try {
-        const { title, description, targetDate, linkedAccount, isCompleted, targetAmount, currentAmount } = req.body;
+        const { title, description, targetDate, linkedAccount, completed, targetAmount, currentAmount, goalType } = req.body;
 
         const updateData = {
             title,
             description,
             targetDate,
-            isCompleted,
+            completed, // Changed from isCompleted to match frontend
             targetAmount,
-            currentAmount
+            currentAmount,
+            goalType
         };
 
         // Only update linkedAccount if it's a non-empty string

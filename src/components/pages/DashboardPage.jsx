@@ -8,7 +8,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { useBills } from '../../hooks/useBills';
 import { useGoals } from '../../hooks/useGoals';
 import { useSettings } from '../../hooks/useSettings';
-import BillModal from '../modals/BillModal';
+import EditBillsModal from '../modals/BillModal';
 
 const COLORS = ['#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#3b82f6'];
 
@@ -39,11 +39,26 @@ const DashboardPage = () => {
     };
 
     const formatDate = (dateStr) => {
-        const d = new Date(dateStr);
-        if (dateFormat === "MM/DD/YYYY") return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-        if (dateFormat === "DD/MM/YYYY") return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-        if (dateFormat === "YYYY-MM-DD") return d.toISOString().split("T")[0];
-        return d.toLocaleDateString();
+        // Handle timezone issues by treating date-only strings as local dates
+        if (!dateStr) return '';
+
+        // If it's already in YYYY-MM-DD format, parse it as local date
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = dateStr.split('-');
+            const date = new Date(year, month - 1, day); // month is 0-indexed
+
+            if (dateFormat === "MM/DD/YYYY") return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+            if (dateFormat === "DD/MM/YYYY") return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            if (dateFormat === "YYYY-MM-DD") return dateStr;
+            return date.toLocaleDateString();
+        }
+
+        // For other date formats, use the original logic
+        const date = new Date(dateStr);
+        if (dateFormat === "MM/DD/YYYY") return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+        if (dateFormat === "DD/MM/YYYY") return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        if (dateFormat === "YYYY-MM-DD") return date.toISOString().split("T")[0];
+        return date.toLocaleDateString();
     };
 
     const filteredTransactions = useMemo(() => {
@@ -56,16 +71,97 @@ const DashboardPage = () => {
     }, [transactions, timeRange, currentMonth, currentYear]);
 
     const filteredBills = useMemo(() => {
-        return bills.filter((b) => {
-            const billDate = new Date(b.date || b.due);
-            if (timeRange === 'month') return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear;
-            if (timeRange === 'year') return billDate.getFullYear() === currentYear;
-            return true;
+        const now = new Date();
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        return bills.map((bill) => {
+            const dateStr = bill.date || bill.due;
+            if (!dateStr) return null;
+
+            // Handle timezone issues by parsing date string directly
+            let billDate;
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                // Parse YYYY-MM-DD as local date
+                const [year, month, day] = dateStr.split('-');
+                billDate = new Date(year, month - 1, day);
+            } else {
+                billDate = new Date(dateStr);
+            }
+
+            // Calculate the next occurrence of this bill for recurring bills
+            let nextBillDate = billDate;
+            const currentDay = currentDate.getDate();
+            const billDay = billDate.getDate();
+            
+            // If the bill day has passed this month, show next month's occurrence
+            if (billDay < currentDay || (billDay === currentDay && currentDate > billDate)) {
+                nextBillDate = new Date(currentYear, currentMonth + 1, billDay);
+            } else {
+                // Show current month's occurrence
+                nextBillDate = new Date(currentYear, currentMonth, billDay);
+            }
+            
+            // For monthly view: show bills that are relevant to current and next month
+            if (timeRange === 'month') {
+                const isCurrentMonth = nextBillDate.getMonth() === currentMonth && nextBillDate.getFullYear() === currentYear;
+                const isNextMonth = nextBillDate.getMonth() === currentMonth + 1 && nextBillDate.getFullYear() === currentYear;
+                
+                // Show if it's current month, next month, or if it's past due this month
+                if (!isCurrentMonth && !isNextMonth && !(billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear)) {
+                    return null;
+                }
+            }
+            
+            // For yearly view: show all bills for the year
+            if (timeRange === 'year') {
+                const isCurrentYear = billDate.getFullYear() === currentYear || nextBillDate.getFullYear() === currentYear;
+                if (!isCurrentYear) {
+                    return null;
+                }
+            }
+            
+            // Calculate status based on the relevant date
+            const relevantDate = (billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear) ? billDate : nextBillDate;
+            const daysDiff = Math.ceil((relevantDate - currentDate) / (1000 * 60 * 60 * 24));
+            
+            let status = 'upcoming';
+            if (daysDiff < 0) {
+                status = 'past-due';
+            } else if (daysDiff <= 3) {
+                status = 'due-soon';
+            }
+            
+            return {
+                ...bill,
+                status,
+                daysUntilDue: daysDiff,
+                displayDate: relevantDate,
+                isRecurring: true // Treat all bills as recurring for display purposes
+            };
+        }).filter(bill => bill !== null).sort((a, b) => {
+            // Sort by status first, then by date
+            if (a.status === 'past-due' && b.status !== 'past-due') return -1;
+            if (b.status === 'past-due' && a.status !== 'past-due') return 1;
+            if (a.status === 'due-soon' && b.status === 'upcoming') return -1;
+            if (b.status === 'upcoming' && a.status === 'due-soon') return 1;
+            
+            return a.displayDate - b.displayDate;
         });
     }, [bills, timeRange, currentMonth, currentYear]);
 
-    const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expenses = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    // Calculate cash flow based on transactions for the selected time period
+    // Income: Total money received this month/year
+    const income = filteredTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    // Expenses: Total money spent this month/year  
+    const expenses = filteredTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    // Net cash flow: Income minus expenses for this period
+    const netCashFlow = income - expenses;
 
     const spendingData = Object.entries(
         filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => {
@@ -120,8 +216,8 @@ const DashboardPage = () => {
                             </div>
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6 text-center">
                                 <p className="text-xl text-[var(--color-text)]">Net Cash Flow</p>
-                                <p className={`text-2xl font-semibold ${income - expenses >= 0 ? "text-[var(--color-cyan)]" : "text-[var(--color-red)]"}`}>
-                                    {currency} {(income - expenses).toLocaleString()}
+                                <p className={`text-2xl font-semibold ${netCashFlow >= 0 ? "text-[var(--color-cyan)]" : "text-[var(--color-red)]"}`}>
+                                    {currency} {netCashFlow.toLocaleString()}
                                 </p>
                             </div>
                         </div>
@@ -134,7 +230,7 @@ const DashboardPage = () => {
                                 <h3 className="text-2xl font-semibold mb-3">Account Balances</h3>
                                 <ul className="space-y-2">
                                     {accounts.map((acc) => (
-                                        <li key={acc.id} className={`flex justify-between ${acc.id === defaultAccountId ? "bg-gray-700/30 p-2 rounded" : ""} text-[var(--color-text)]`}>
+                                        <li key={acc._id || acc.id} className={`flex justify-between ${(acc._id || acc.id) === defaultAccountId ? "bg-gray-700/30 p-2 rounded" : ""} text-[var(--color-text)]`}>
                                             <span>{acc.name}</span>
                                             <span className="font-semibold text-[var(--color-cyan)]">{currency} {acc.balance.toLocaleString()}</span>
                                         </li>
@@ -168,11 +264,11 @@ const DashboardPage = () => {
                                 )}
                             </div>
 
-                            {/* Upcoming Bills */}
+                            {/* Bills Overview */}
                             <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
                                 <div className="flex justify-center items-center mb-4">
                                     <h3 className="text-2xl font-semibold text-[var(--color-text)]">
-                                        Upcoming Bills ({timeRange === "month" ? "This Month" : "This Year"})
+                                        Bills ({timeRange === "month" ? "Current & Next Month" : "This Year"})
                                     </h3>
                                 </div>
 
@@ -182,7 +278,8 @@ const DashboardPage = () => {
                                             <thead>
                                                 <tr className="text-[var(--color-muted)] border-b border-[var(--color-border)]">
                                                     <th className="py-2">Name</th>
-                                                    <th className="py-2 text-center">Date</th>
+                                                    <th className="py-2 text-center">Due Date</th>
+                                                    <th className="py-2 text-center">Status</th>
                                                     <th className="py-2 text-right">Amount</th>
                                                 </tr>
                                             </thead>
@@ -195,7 +292,22 @@ const DashboardPage = () => {
                                                     >
                                                         <td className="py-2 text-[var(--color-text)]">{bill.name}</td>
                                                         <td className="py-2 text-[var(--color-text)] text-center">
-                                                            {formatDate(bill.date || bill.due)}
+                                                            {bill.displayDate ? formatDate(bill.displayDate.toISOString().split('T')[0]) : formatDate(bill.date || bill.due)}
+                                                        </td>
+                                                        <td className="py-2 text-center">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                bill.status === 'past-due' 
+                                                                    ? 'bg-red-500/20 text-red-400' 
+                                                                    : bill.status === 'due-soon'
+                                                                    ? 'bg-yellow-500/20 text-yellow-400'
+                                                                    : 'bg-green-500/20 text-green-400'
+                                                            }`}>
+                                                                {bill.status === 'past-due' 
+                                                                    ? 'Past Due' 
+                                                                    : bill.status === 'due-soon'
+                                                                    ? 'Due Soon'
+                                                                    : 'Upcoming'}
+                                                            </span>
                                                         </td>
                                                         <td className="py-2 text-right text-[var(--color-red)]">
                                                             {currency} {bill.amount.toLocaleString()}
@@ -206,7 +318,7 @@ const DashboardPage = () => {
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-gray-400 text-center">No upcoming bills</p>
+                                    <p className="text-gray-400 text-center">No bills found</p>
                                 )}
 
                                 {/* Edit button */}
@@ -221,72 +333,72 @@ const DashboardPage = () => {
 
                                 {/* Bill Modal */}
                                 {isBillModalOpen && (
-                                    <BillModal
+                                    <EditBillsModal
                                         isOpen={isBillModalOpen}
                                         onClose={() => setIsBillModalOpen(false)}
                                         bills={bills}
-                                        onSave={() => {}} // Fallback for compatibility
+                                        onSave={() => { }} // Fallback for compatibility
                                         updateBills={updateBills}
                                     />
                                 )}
                             </div>
 
-                        {/* Goals */}
-                        <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
-                            <h3 className="text-2xl font-semibold mb-3">Goals Progress</h3>
-                            {goals.length > 0 ? (
-                                goals.map((goal) => {
-                                    const progress = Math.min((goal.saved / goal.target) * 100, 100).toFixed(0);
-                                    return (
-                                        <div key={goal.id} className="mb-3">
-                                            <div className="flex justify-between text-lg mb-1">
-                                                <span>{goal.name}</span>
-                                                <span>{progress}%</span>
+                            {/* Goals */}
+                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
+                                <h3 className="text-2xl font-semibold mb-3">Goals Progress</h3>
+                                {goals.filter(goal => !goal.completed).length > 0 ? (
+                                    goals.filter(goal => !goal.completed).map((goal) => {
+                                        const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100).toFixed(0);
+                                        return (
+                                            <div key={goal._id || goal.id} className="mb-3">
+                                                <div className="flex justify-between text-lg mb-1">
+                                                    <span>{goal.title}</span>
+                                                    <span>{progress}%</span>
+                                                </div>
+                                                <div className="h-3 bg-gray-700 rounded-full">
+                                                    <div
+                                                        className="h-full bg-[var(--color-cyan)] rounded-full"
+                                                        style={{ width: `${progress}%` }}
+                                                    ></div>
+                                                </div>
                                             </div>
-                                            <div className="h-3 bg-gray-700 rounded-full">
-                                                <div
-                                                    className="h-full bg-[var(--color-cyan)] rounded-full"
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <p className="text-gray-400 text-center">No goals set</p>
-                            )}
-                        </div>
-
-                        {/* Alerts */}
-                        <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
-                            <h3 className="text-2xl font-semibold mb-3">Alerts</h3>
-                            <ul className="list-disc list-inside text-[var(--color-text)] space-y-1">
-                                {expenses > income && (
-                                    <li className="text-[var(--color-red)]">Spending exceeds income!</li>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-gray-400 text-center">No active goals</p>
                                 )}
-                                {accounts.some(a => a.id === defaultAccountId && a.balance < 50) && (
-                                    <li className="text-yellow-400">Low default account balance</li>
-                                )}
-                            </ul>
-                        </div>
+                            </div>
 
-                        {/* Income vs Expenses */}
-                        <div className="col-span-full flex justify-center">
-                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md shadow-lg rounded-2xl p-6 w-full max-w-xl">
-                                <h3 className="text-2xl font-semibold mb-3">Income vs Expenses ({timeRange === 'month' ? 'Monthly' : 'Yearly'})</h3>
-                                <div className="h-48">
-                                    <ResponsiveContainer>
-                                        <BarChart data={incomeVsExpenseData}>
-                                            <XAxis dataKey="name" stroke="#9ca3af" />
-                                            <YAxis stroke="#9ca3af" />
-                                            <Tooltip />
-                                            <Legend />
-                                            <Bar dataKey="amount" fill="#06b6d4" radius={[6, 6, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                            {/* Alerts */}
+                            <div className="bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg p-6">
+                                <h3 className="text-2xl font-semibold mb-3">Alerts</h3>
+                                <ul className="list-disc list-inside text-[var(--color-text)] space-y-1">
+                                    {expenses > income && (
+                                        <li className="text-[var(--color-red)]">Spending exceeds income!</li>
+                                    )}
+                                    {accounts.some(a => (a._id || a.id) === defaultAccountId && a.balance < 50) && (
+                                        <li className="text-yellow-400">Low default account balance</li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            {/* Income vs Expenses */}
+                            <div className="col-span-full flex justify-center">
+                                <div className="bg-[var(--color-card-bg)] backdrop-blur-md shadow-lg rounded-2xl p-6 w-full max-w-xl">
+                                    <h3 className="text-2xl font-semibold mb-3">Income vs Expenses ({timeRange === 'month' ? 'Monthly' : 'Yearly'})</h3>
+                                    <div className="h-48">
+                                        <ResponsiveContainer>
+                                            <BarChart data={incomeVsExpenseData}>
+                                                <XAxis dataKey="name" stroke="#9ca3af" />
+                                                <YAxis stroke="#9ca3af" />
+                                                <Tooltip />
+                                                <Legend />
+                                                <Bar dataKey="amount" fill="#06b6d4" radius={[6, 6, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
                         </div>
                         {/* End Dashboard Grid */}

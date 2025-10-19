@@ -8,7 +8,8 @@ const GoalSchema = new mongoose.Schema({
     currentAmount: { type: Number, default: 0 },
     targetDate: { type: Date },
     linkedAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },
-    isCompleted: { type: Boolean, default: false },
+    completed: { type: Boolean, default: false }, // Changed from isCompleted to match frontend
+    goalType: { type: String, enum: ['short-term', 'medium-term', 'long-term'], default: '' }, // Added goalType field
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 

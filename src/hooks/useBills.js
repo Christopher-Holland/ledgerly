@@ -120,6 +120,17 @@ export const useBills = () => {
         try {
             const results = [];
             
+            // Get current bills to compare with updated bills
+            const currentBillIds = bills.map(bill => bill._id);
+            const updatedBillIds = updatedBills.map(bill => bill._id).filter(id => id);
+            
+            // Delete bills that are no longer in the updated list
+            const billsToDelete = currentBillIds.filter(id => !updatedBillIds.includes(id));
+            for (const billId of billsToDelete) {
+                const result = await deleteBill(billId);
+                results.push(result);
+            }
+            
             // Process each bill - create new ones or update existing ones
             for (const bill of updatedBills) {
                 if (bill._id) {
