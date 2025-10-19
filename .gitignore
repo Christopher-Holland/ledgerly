@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env
+.env.*         # .env.local, .env.production, etc.
+
+# Build outputs
+build/
+public/build/
+out/
+
+# Vite
+/dist
+/.vite
+
+# Misc
+coverage/
