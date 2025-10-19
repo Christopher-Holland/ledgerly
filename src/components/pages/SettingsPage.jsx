@@ -51,7 +51,7 @@ const SettingsPage = () => {
     };
 
     return (
-        <div className="fixed inset-0 flex bg-[var(--color-bg)] text-[var(--color-text)]">
+        <div className="min-h-screen flex bg-[var(--color-bg)] text-[var(--color-text)]">
             <Sidebar />
             <div className="flex-1 flex flex-col">
                 <Navbar title="Settings" />

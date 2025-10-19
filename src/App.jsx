@@ -1,7 +1,7 @@
 /**
  * @fileoverview Main App component with routing and authentication
  * @description React application entry point with protected routes and context providers
- * @author Christopher Holland
+ * @author Ledgerly Development Team
  * @version 1.0.0
  */
 

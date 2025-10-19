@@ -108,6 +108,18 @@
     width: 100%;
     min-height: 100vh;
     overflow-x: hidden; /* Prevent horizontal scroll */
+    /* Ensure proper scaling */
+    box-sizing: border-box;
+    -webkit-text-size-adjust: 100%; /* Prevent iOS Safari from adjusting text size */
+    -moz-text-size-adjust: 100%; /* Prevent Firefox from adjusting text size */
+    text-size-adjust: 100%; /* Prevent browsers from adjusting text size */
+  }
+
+  /* Ensure all elements use border-box sizing */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
   /* Responsive font scaling */

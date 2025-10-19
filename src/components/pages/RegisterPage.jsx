@@ -43,7 +43,7 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="fixed inset-0 flex text-[var(--color-text)]">
+        <div className="min-h-screen flex text-[var(--color-text)]">
             {/* Background Gradients */}
             <div className="absolute inset-0" style={{ background: "var(--color-bg-gradient)" }} />
             <div className="absolute inset-0" style={{ background: "var(--color-bg-radial)" }} />
