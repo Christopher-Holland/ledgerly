@@ -10,7 +10,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 // API configuration
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "https://ledgerly-p5ss.onrender.com";
 const api = axios.create({ baseURL: API_BASE_URL });
 
 // Create authentication context
