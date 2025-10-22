@@ -96,15 +96,33 @@ export const registerUser = async (req, res) => {
 // @access  Public
 export const loginUser = async (req, res) => {
     try {
+        console.log("🔐 Login attempt:", req.body);
         const { username, password } = req.body;
-        const user = await User.findOne({ username });
 
-        if (!user) return res.status(401).json({ message: "Invalid username or password" });
+        if (!username || !password) {
+            console.log("❌ Missing username or password");
+            return res.status(400).json({ message: "Username and password are required" });
+        }
+
+        const user = await User.findOne({ username });
+        console.log("👤 User found:", user ? "Yes" : "No");
+
+        if (!user) {
+            console.log("❌ User not found for username:", username);
+            return res.status(401).json({ message: "Invalid username or password" });
+        }
 
         const isMatch = await user.matchPassword(password);
-        if (!isMatch) return res.status(401).json({ message: "Invalid username or password" });
+        console.log("🔑 Password match:", isMatch);
+
+        if (!isMatch) {
+            console.log("❌ Password mismatch for username:", username);
+            return res.status(401).json({ message: "Invalid username or password" });
+        }
 
         const token = generateToken(user._id);
+        console.log("✅ Login successful for user:", user.username);
+        
         res.json({
             _id: user._id,
             name: user.name,

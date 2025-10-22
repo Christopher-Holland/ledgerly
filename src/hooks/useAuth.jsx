@@ -72,7 +72,12 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password, rememberMe = false) => {
         setLoading(true);
         try {
+            console.log("🚀 Attempting login for:", username);
+            console.log("🌐 API Base URL:", API_BASE_URL);
+            
             const res = await api.post("/api/users/login", { username, password });
+            console.log("✅ Login response:", res.data);
+            
             const { _id, name, username: uname, email, token: userToken } = res.data;
 
             setUser({ _id, name, username: uname, email });
@@ -88,7 +93,10 @@ export const AuthProvider = ({ children }) => {
 
             return { success: true, user: { _id, name, username: uname, email } };
         } catch (err) {
-            console.error("Login failed:", err.response?.data || err);
+            console.error("❌ Login failed:", err);
+            console.error("❌ Error response:", err.response?.data);
+            console.error("❌ Error status:", err.response?.status);
+            console.error("❌ Error headers:", err.response?.headers);
             return { success: false, error: err.response?.data?.message || "Login failed" };
         } finally {
             setLoading(false);

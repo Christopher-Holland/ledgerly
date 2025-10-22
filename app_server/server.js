@@ -26,7 +26,7 @@ const app = express();
 // ===== MIDDLEWARE =====
 app.use(express.json());
 app.use(cors({
-    origin: ['https://myledger.vercel.app', 'http://localhost:3000', 'http://localhost:5173'],
+    origin: true, // Allow all origins for debugging
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
