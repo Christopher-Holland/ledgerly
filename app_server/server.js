@@ -46,8 +46,13 @@ const buildPath = path.join(__dirname, '../dist'); // Build files are in the roo
 app.use(express.static(buildPath));
 
 // Fallback route for SPA
-app.use('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
+app.use((req, res, next) => {
+    // If the request doesn't start with /api, serve the React app
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(buildPath, 'index.html'));
+    } else {
+        next();
+    }
 });
 
 // ===== ERROR HANDLING =====
