@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 const WelcomePage = ({ onComplete }) => {
     const [headText, setHeadText] = useState("");
     const [subText, setSubText] = useState("");
-    const headerText = "HELLO AND WELCOME TO LEDGERLY.";
+    const headerText = "HELLO AND WELCOME TO MY LEDGER.";
     const subHeadText = "Your Personal Finance Tracker.\nLet's Get Started!";
 
     useEffect(() => {
