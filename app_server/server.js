@@ -43,13 +43,16 @@ app.use('/api/bills', billsRoute);
 
 // ===== SERVE REACT BUILD =====
 const buildPath = path.join(__dirname, '../dist'); // Build files are in the root dist folder
+const rootPath = path.join(__dirname, '..'); // Root directory for index.html
+
+// Serve static files from dist folder (CSS, JS, assets)
 app.use(express.static(buildPath));
 
 // Fallback route for SPA
 app.use((req, res, next) => {
     // If the request doesn't start with /api, serve the React app
     if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(buildPath, 'index.html'));
+        res.sendFile(path.join(rootPath, 'index.html'));
     } else {
         next();
     }
