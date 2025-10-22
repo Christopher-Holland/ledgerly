@@ -10,7 +10,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 // API configuration
-const API_BASE_URL = "https://my ledger-p5ss.onrender.com";
+const API_BASE_URL = "https://myledger.onrender.com";
 const api = axios.create({ baseURL: API_BASE_URL });
 
 // Create authentication context
