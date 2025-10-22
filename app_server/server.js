@@ -42,7 +42,7 @@ app.use('/api/accounts', accountRoutes);
 app.use('/api/bills', billsRoute);
 
 // ===== SERVE REACT BUILD =====
-const buildPath = path.join(__dirname, '../app_client/dist'); // Adjust if your build folder is different
+const buildPath = path.join(__dirname, '../dist'); // Build files are in the root dist folder
 app.use(express.static(buildPath));
 
 // Fallback route for SPA
