@@ -46,7 +46,7 @@ const buildPath = path.join(__dirname, '../app_client/dist'); // Adjust if your 
 app.use(express.static(buildPath));
 
 // Fallback route for SPA
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'));
 });
 
