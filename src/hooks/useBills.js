@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://ledgerly-p5ss.onrender.com";
+const API_BASE_URL = "https://my ledger-p5ss.onrender.com";
 const api = axios.create({ baseURL: API_BASE_URL });
 
 export const useBills = () => {

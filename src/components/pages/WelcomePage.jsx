@@ -41,7 +41,7 @@ const WelcomePage = ({ onComplete }) => {
             {/* Radial glow overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--color-accent-overlay),transparent_70%)]" />
 
-            <h1 className="fixed top-10 logo">ledgerly</h1>
+            <h1 className="fixed top-10 logo">my ledger</h1>
 
             {/* Text block */}
             <div className="relative flex flex-col items-center z-10">

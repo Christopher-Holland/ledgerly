@@ -49,7 +49,7 @@ const RegisterPage = () => {
             <div className="absolute inset-0" style={{ background: "var(--color-bg-radial)" }} />
 
             <div className="relative z-10 flex flex-col items-center justify-center w-full min-h-screen">
-                <h1 className="fixed top-10 logo">ledgerly</h1>
+                <h1 className="fixed top-10 logo">my ledger</h1>
 
                 <div className="w-full max-w-lg p-8 bg-[var(--color-card-bg)] backdrop-blur-md rounded-2xl shadow-lg space-y-6">
                     <h2 className="text-4xl font-bold mb-6 text-center text-[var(--color-cyan)]">Create Account</h2>
