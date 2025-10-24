@@ -38,7 +38,7 @@ const Sidebar = () => {
 
       {/* Footer */}
       <div className="mt-auto text-sidebar text-sm">
-        &copy; 2025 Ledgerly
+        &copy; 2025 My Ledger
       </div>
     </aside>
   );
