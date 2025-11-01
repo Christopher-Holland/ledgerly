@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     // Validate user session
     useEffect(() => {
         const checkAuth = async () => {
-            if (token) {
+            if (token && !user) {
                 try {
                     console.log("Checking auth with token:", token);
                     const res = await api.get("/api/users/me");
@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
 
             setUser({ _id, name: n, username: uname, email: em });
             setToken(userToken);
-            localStorage.setItem("token", userToken); // Persist token after registration
+            sessionStorage.setItem("token", userToken); // Persist token after registration
 
             return { success: true, user: { _id, name: n, username: uname, email: em } };
         } catch (err) {
